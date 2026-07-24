@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Learning Arcade - Hiralix</title>
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --accent: #FFE66D;
+            --bg: #F7FFF7;
+            --text: #2F3E46;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* App Container */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border: 8px solid var(--accent);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 85vh;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            text-shadow: 2px 2px 0px var(--accent);
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #eee;
+            padding: 10px 20px;
+            border-radius: 50px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Main Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            flex-grow: 1;
+        }
+
+        .menu-btn {
+            background: white;
+            border: 4px solid #ddd;
+            border-radius: 20px;
+            padding: 20px 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 0 #ddd;
+        }
+
+        .menu-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #ddd;
+        }
+
+        .menu-btn .icon {
+            font-size: 2.5rem;
+        }
+
+        /* Theme Colors for Buttons */
+        .btn-abc { border-color: #FF6B6B; box-shadow: 0 6px 0 #D95353; color: #D95353;}
+        .btn-123 { border-color: #4ECDC4; box-shadow: 0 6px 0 #3DB3AB; color: #3DB3AB;}
+        .btn-colors { border-color: #FF9F43; box-shadow: 0 6px 0 #E08528; color: #E08528;}
+        .btn-shapes { border-color: #10AC84; box-shadow: 0 6px 0 #0D8F6E; color: #0D8F6E;}
+        .btn-animals { border-color: #54A0FF; box-shadow: 0 6px 0 #3885E6; color: #3885E6;}
+        .btn-memory { border-color: #5F27CD; box-shadow: 0 6px 0 #4C1CA3; color: #4C1CA3;}
+
+        /* Game Screens */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .back-btn {
+            align-self: flex-start;
+            background: #2F3E46;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        /* Welcome Screen Styling */
+        .welcome-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            gap: 20px;
+        }
+
+        .play-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #D95353;
+            font-weight: bold;
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+
+        .play-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #D95353;
+        }
+
+        /* Generic Flashcard/Interactive styles */
+        .display-box {
+            font-size: 5rem;
+            margin: 20px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .action-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #3DB3AB;
+            font-weight: bold;
+        }
+
+        .action-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0px 0 #3DB3AB;
+        }
+
+        /* Memory Game Grid */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .card {
+            height: 70px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: transparent;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .card.flipped {
+            background: white;
+            border: 3px solid var(--primary);
+            color: initial;
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .confetti {
+            position: absolute;
+            font-size: 2rem;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="welcome-content">
+                <header>
+                    <h1>Welcome to Hiralix</h1>
+                    <div class="subtitle" style="margin-top: 10px;">Making Education Interactive</div>
+                </header>
+                <div style="font-size: 4rem; margin: 10px 0;">🎮📚🎨</div>
+                <h2 style="color: var(--secondary);">Kids Arcade Learning</h2>
+                <button class="play-btn" onclick="startGame()">PLAY NOW ▶</button>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <header>
+                <h1>🌟 KIDS ARCADE 🌟</h1>
+                <div class="subtitle">Choose Your Game!</div>
+            </header>
+
+            <div class="stats-bar">
+                <span>⭐ Stars: <span id="star-count">0</span></span>
+                <span>🏆 Badges: <span id="badge-count">0</span></span>
+            </div>
+
+            <div class="menu-grid">
+                <button class="menu-btn btn-abc" onclick="openGame('abc')"><span class="icon">📖</span>Alphabet</button>
+                <button class="menu-btn btn-123" onclick="openGame('numbers')"><span class="icon">🔢</span>Numbers</button>
+                <button class="menu-btn btn-colors" onclick="openGame('colors')"><span class="icon">🎨</span>Colors</button>
+                <button class="menu-btn btn-shapes" onclick="openGame('shapes')"><span class="icon">🟨</span>Shapes</button>
+                <button class="menu-btn btn-animals" onclick="openGame('animals')"><span class="icon">🐶</span>Animals</button>
+                <button class="menu-btn btn-memory" onclick="openGame('memory')"><span class="icon">🧠</span>Memory</button>
+            </div>
+        </div>
+
+        <!-- Generic Game Screen Framework -->
+        <div id="game-screen" class="screen">
+            <button class="back-btn" onclick="goHome()">⬅ Back</button>
+            <h2 id="game-title" style="margin-bottom: 10px;">Game</h2>
+            <div id="game-display" class="display-box">🎈</div>
+            <button class="action-btn" id="game-action-btn" onclick="nextItem()">Next! ➔</button>
+        </div>
+
+        <!-- Custom Memory Game Screen -->
+        <div id="memory-screen" class="screen">
+            <button class="back-btn" onclick="goHome()">⬅ Back</button>
+            <h2>🧠 Match the Pairs!</h2>
+            <div class="memory-grid" id="memory-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // App State
+        let stars = 0;
+        let badges = 0;
+        let currentGame = '';
+        let currentItemIndex = 0;
+
+        // Game Data Collections
+        const gameData = {
+            abc: { 
+                title: "📖 Alphabet Explorer", 
+                items: ["A a", "B b", "C c", "D d", "E e", "F f", "G g", "H h", "I i", "J j", "K k", "L l", "M m", "N n", "O o", "P p", "Q q", "R r", "S s", "T t", "U u", "V v", "W w", "X x", "Y y", "Z z"] 
+            },
+            numbers: { title: "🔢 Number Counting", items: ["1 🎈", "2 🎈🎈", "3 🎈🎈🎈", "4 🍀", "5 🍀", "6 🎂", "7 🎂", "8 🌟", "9 🌟", "10 🌟"] },
+            colors: { title: "🎨 Color Magic", items: ["🔴 Red", "🔵 Blue", "🟢 Green", "🟡 Yellow", "🟠 Orange", "🟣 Purple", "⚫ Black", "⚪ White"] },
+            shapes: { title: "🟨 Shape Land", items: ["🔺 Triangle", "🟩 Square", "🟡 Circle", "Rectangle 🧱", "⭐ Star", "🤍 Heart"] },
+            animals: { 
+                title: "🐶 Animal Sound Safari", 
+                items: ["🐶 Dog", "🐱 Cat", "🦁 Lion", "🐮 Cow", "🐷 Pig", "🐵 Monkey", "🦆 Duck", "🐸 Frog", "🐦 Bird", "🐔 Chicken", "🦋 Butterfly", "🦒 Giraffe", "🐘 Elephant", "🐢 Turtle", "🐻 Bear", "🐭 Mouse", "🐯 Tiger", "🐫 Camel", "🐑 Sheep", "🦇 Bat", "🐴 Horse", "🦌 Deer", "🐰 Rabbit"] 
+            }
+        };
+
+        // Speech Engine
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                // Strip emoji descriptions for cleaner audio
+                let cleanText = text.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]/g, '').trim();
+                
+                // Format speech specifically for alphabet letters
+                if (currentGame === 'abc') {
+                    const letter = cleanText.split(' ')[0]; // Pick first character (e.g., 'A')
+                    cleanText = `Letter ${letter}`;
+                }
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.rate = 0.9; 
+                utterance.pitch = 1.2; // Kid-friendly high pitch
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Navigation
+        function startGame() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('home-screen').classList.add('active');
+            speak("Welcome to Hiralix!");
+        }
+
+        function openGame(gameKey) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            
+            if (gameKey === 'memory') {
+                document.getElementById('memory-screen').classList.add('active');
+                setupMemoryGame();
+            } else {
+                currentGame = gameKey;
+                currentItemIndex = 0;
+                document.getElementById('game-title').innerText = gameData[gameKey].title;
+                document.getElementById('game-screen').classList.add('active');
+                updateGameDisplay();
+            }
+        }
+
+        function goHome() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('home-screen').classList.add('active');
+            document.getElementById('star-count').innerText = stars;
+            document.getElementById('badge-count').innerText = badges;
+        }
+
+        // Standard Flash Games Engine
+        function updateGameDisplay() {
+            const item = gameData[currentGame].items[currentItemIndex];
+            const display = document.getElementById('game-display');
+            display.innerText = item;
+            
+            // Text color logic for colors game
+            if(currentGame === 'colors') {
+                const colorMap = { 'Red': '#FF6B6B', 'Blue': '#54A0FF', 'Green': '#10AC84', 'Yellow': '#FECA57', 'Orange': '#FF9F43', 'Purple': '#5F27CD', 'Black': '#000', 'White': '#ccc'};
+                const pureColorStr = item.split(' ')[1];
+                display.style.color = colorMap[pureColorStr] || '#2F3E46';
+            } else {
+                display.style.color = '#2F3E46';
+            }
+            
+            speak(item);
+        }
+
+        function nextItem() {
+            // Reward stars for playing
+            addStar();
+            
+            currentItemIndex++;
+            if (currentItemIndex >= gameData[currentGame].items.length) {
+                currentItemIndex = 0; // Loop back
+                badges++;
+                celebrate();
+            }
+            updateGameDisplay();
+        }
+
+        // Stars Logic
+        function addStar() {
+            stars++;
+            document.getElementById('star-count').innerText = stars;
+            // Visual mini explosion effect
+            const pop = document.createElement('div');
+            pop.className = 'confetti';
+            pop.innerText = '⭐';
+            pop.style.left = Math.random() * 80 + 10 + '%';
+            pop.style.top = '50%';
+            document.querySelector('.app-container').appendChild(pop);
+            setTimeout(() => pop.remove(), 1000);
+        }
+
+        // Memory Game Logic
+        let memoryCards = [];
+        let flippedCards = [];
+        function setupMemoryGame() {
+            const icons = ['🐶', '🐱', '🦁', '🐵', '🦆', '🐸', '🐶', '🐱', '🦁', '🐵', '🦆', '🐸'];
+            // Shuffle
+            icons.sort(() => Math.random() - 0.5);
+            
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            flippedCards = [];
+            
+            icons.forEach((icon, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.icon = icon;
+                card.dataset.index = index;
+                card.innerText = icon;
+                card.onclick = () => flipCard(card);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipCard(card) {
+            if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
+                card.classList.add('flipped');
+                flippedCards.push(card);
+                speak(card.dataset.icon);
+
+                if (flippedCards.length === 2) {
+                    setTimeout(checkMemoryMatch, 800);
+                }
+            }
+        }
+
+        function checkMemoryMatch() {
+            const [card1, card2] = flippedCards;
+            if (card1.dataset.icon === card2.dataset.icon) {
+                // Match found
+                stars += 2;
+                document.getElementById('star-count').innerText = stars;
+                // Check if win game
+                if(document.querySelectorAll('.card.flipped').length === 12) {
+                    badges++;
+                    celebrate();
+                    speak("You matched them all! Great job!");
+                }
+            } else {
+                // Not a match, flip back
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+            }
+            flippedCards = [];
+        }
+
+        function celebrate() {
+            speak("Woohoo! Outstanding!");
+            for(let i=0; i<10; i++) {
+                setTimeout(() => {
+                    const pop = document.createElement('div');
+                    pop.className = 'confetti';
+                    pop.innerText = ['🎉','✨','🌟','🎈'][Math.floor(Math.random()*4)];
+                    pop.style.left = Math.random() * 80 + 10 + '%';
+                    pop.style.top = '70%';
+                    document.querySelector('.app-container').appendChild(pop);
+                    setTimeout(() => pop.remove(), 1000);
+                }, i * 150);
+            }
+        }
+    </script>
+</body>
+</html>
