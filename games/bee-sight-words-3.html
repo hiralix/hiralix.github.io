@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bee Sight Words 🐝</title>
+<style>
+/* ============================================================
+   BEE SIGHT WORDS — a single-file preschool/kindergarten game
+   All CSS lives here. No external assets, fonts, or libraries.
+   ============================================================ */
+
+:root{
+  --sky-top:#7fd8ff;
+  --sky-bottom:#bdf2ff;
+  --grass-1:#8ee06a;
+  --grass-2:#6fc94e;
+  --sun:#ffe066;
+  --pink:#ff6fa5;
+  --purple:#a56bff;
+  --yellow:#ffd23f;
+  --orange:#ff9a3d;
+  --white:#ffffff;
+  --ink:#3a2b52;
+  --heart:#ff4d6d;
+  --good:#3ecf6b;
+  --bad:#ff5c5c;
+  --panel-radius:28px;
+}
+
+*{box-sizing:border-box;}
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:'Comic Sans MS','Trebuchet MS','Verdana',sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+button{
+  font-family:inherit;
+  cursor:pointer;
+  border:none;
+  outline:none;
+}
+button:focus-visible{
+  outline:4px solid #fff;
+  outline-offset:2px;
+}
+
+/* ---------- App shell ---------- */
+#app{
+  position:relative;
+  width:100vw;
+  height:100vh;   /* fallback for older browsers */
+  height:100dvh;  /* accounts for mobile browser toolbars so nothing gets clipped */
+  background:linear-gradient(to bottom, var(--sky-top) 0%, var(--sky-bottom) 60%, var(--grass-2) 60%, var(--grass-1) 100%);
+  overflow:hidden;
+}
+
+/* Generic full-screen panel used for start/gameover/victory/instructions */
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1vh;
+  text-align:center;
+  padding:3vh 4vw;
+  z-index:50;
+}
+.hidden{ display:none !important; }
+
+.card{
+  background:rgba(255,255,255,0.92);
+  border:6px solid var(--purple);
+  border-radius:var(--panel-radius);
+  padding:3vh 4vw;
+  max-width:600px;
+  width:90%;
+  max-height:92vh;
+  overflow-y:auto;
+  box-shadow:0 10px 0 rgba(0,0,0,0.15);
+}
+
+h1.title{
+  font-size:clamp(2rem, 6vw, 3.4rem);
+  color:var(--pink);
+  text-shadow:3px 3px 0 var(--white), 6px 6px 0 rgba(0,0,0,0.1);
+  margin:0 0 0.3em 0;
+}
+h2.subtitle{
+  font-size:clamp(1.2rem, 3.5vw, 1.8rem);
+  color:var(--purple);
+  margin:0.2em 0;
+}
+p.instructions-text{
+  font-size:clamp(1rem, 2.6vw, 1.3rem);
+  color:var(--ink);
+  line-height:1.5;
+  text-align:left;
+}
+p.instructions-text b{ color:var(--pink); }
+
+.big-emoji{
+  font-size:clamp(3rem, 10vw, 5rem);
+  line-height:1;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  font-size:clamp(1.1rem, 3vw, 1.5rem);
+  font-weight:bold;
+  color:#fff;
+  padding:0.7em 1.4em;
+  border-radius:50px;
+  box-shadow:0 6px 0 rgba(0,0,0,0.2);
+  transition:transform 0.08s ease;
+  margin:0.4em;
+}
+.btn:active{ transform:translateY(5px); box-shadow:0 1px 0 rgba(0,0,0,0.2); }
+.btn-primary{ background:linear-gradient(180deg,#ff8fbd,#ff5f9c); }
+.btn-secondary{ background:linear-gradient(180deg,#a887ff,#7c53ff); }
+.btn-yellow{ background:linear-gradient(180deg,#ffe066,#ffc233); color:#5b4300;}
+.btn-green{ background:linear-gradient(180deg,#7be69a,#3ecf6b); }
+.btn-row{ display:flex; flex-wrap:wrap; justify-content:center; }
+
+/* ---------- Decorative background elements ---------- */
+.sun{
+  position:absolute;
+  top:3%; right:6%;
+  width:12vw; height:12vw;
+  max-width:110px; max-height:110px;
+  background:radial-gradient(circle, #fff6c9 0%, var(--sun) 70%);
+  border-radius:50%;
+  box-shadow:0 0 40px 10px rgba(255,224,102,0.6);
+  z-index:1;
+  animation:pulse-sun 4s ease-in-out infinite;
+}
+@keyframes pulse-sun{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.06); }
+}
+
+.cloud{
+  position:absolute;
+  font-size:clamp(2.2rem, 6vw, 4rem);
+  z-index:1;
+  opacity:0.95;
+  animation:drift linear infinite;
+  filter:drop-shadow(0 4px 2px rgba(0,0,0,0.08));
+}
+@keyframes drift{
+  from{ transform:translateX(-20vw); }
+  to{ transform:translateX(120vw); }
+}
+
+.grass-tuft{
+  position:absolute;
+  bottom:0;
+  font-size:clamp(1.5rem, 5vw, 3rem);
+  z-index:2;
+  animation:sway 2.6s ease-in-out infinite;
+  transform-origin:bottom center;
+}
+@keyframes sway{
+  0%,100%{ transform:rotate(-4deg); }
+  50%{ transform:rotate(4deg); }
+}
+
+/* ---------- Game HUD ---------- */
+#gameScreen{
+  position:absolute;
+  inset:0;
+  z-index:10;
+}
+
+#hud{
+  position:absolute;
+  top:0; left:0; right:0;
+  z-index:30;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:1.2vh 2vw;
+  gap:1vw;
+  pointer-events:none;
+}
+#hud > *{ pointer-events:auto; }
+
+.hud-panel{
+  background:rgba(255,255,255,0.88);
+  border:3px solid var(--purple);
+  border-radius:20px;
+  padding:0.4em 0.8em;
+  font-weight:bold;
+  color:var(--ink);
+  font-size:clamp(0.85rem, 2vw, 1.1rem);
+  display:flex;
+  align-items:center;
+  gap:0.4em;
+  white-space:nowrap;
+}
+
+#livesDisplay .heart{
+  font-size:1.2em;
+  transition:transform 0.2s;
+}
+#livesDisplay .heart.lost{ opacity:0.25; transform:scale(0.8); }
+
+#topCenter{
+  position:absolute;
+  top:1.2vh;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:31;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.3em;
+}
+
+#targetWordPanel{
+  background:linear-gradient(180deg,#fff6c9,#ffe066);
+  border:4px solid var(--orange);
+  border-radius:24px;
+  padding:0.4em 1.2em;
+  text-align:center;
+  box-shadow:0 6px 0 rgba(0,0,0,0.12);
+}
+#targetWordLabel{
+  font-size:clamp(0.7rem, 1.8vw, 0.95rem);
+  color:#8a5a00;
+  font-weight:bold;
+  letter-spacing:1px;
+}
+#targetWord{
+  font-size:clamp(1.8rem, 6vw, 3rem);
+  font-weight:bold;
+  color:#7a3e00;
+  text-transform:lowercase; /* ensure sight words always render lowercase */
+  line-height:1.1;
+}
+
+#speakBtn{
+  background:var(--purple);
+  color:#fff;
+  border-radius:50%;
+  width:2.2em;
+  height:2.2em;
+  font-size:1.1rem;
+  box-shadow:0 4px 0 rgba(0,0,0,0.15);
+}
+
+#progressBarWrap{
+  width:min(70vw, 380px);
+  height:14px;
+  background:rgba(255,255,255,0.7);
+  border:2px solid var(--purple);
+  border-radius:10px;
+  overflow:hidden;
+}
+#progressBarFill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#ff8fbd,#a56bff);
+  transition:width 0.4s ease;
+}
+
+/* ---------- Garden play area ---------- */
+#garden{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+}
+
+.flower{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  transform:translate(-50%,-50%);
+  animation:flower-sway 3s ease-in-out infinite;
+  z-index:5;
+  cursor:pointer;
+}
+@keyframes flower-sway{
+  0%,100%{ rotate:-6deg; }
+  50%{ rotate:6deg; }
+}
+.flower .flower-emoji{
+  font-size:clamp(2.2rem, 7vw, 4rem);
+  filter:drop-shadow(0 4px 3px rgba(0,0,0,0.15));
+}
+.flower .flower-word{
+  margin-top:-0.3em;
+  background:#fff;
+  border:3px solid var(--purple);
+  border-radius:14px;
+  padding:0.15em 0.7em;
+  font-weight:bold;
+  font-size:clamp(1.3rem, 4.5vw, 2.1rem);
+  color:var(--ink);
+  text-transform:lowercase; /* words always shown lowercase */
+  box-shadow:0 3px 0 rgba(0,0,0,0.12);
+  position:relative;
+  z-index:16; /* stay above the bee (z-index 15) so the word is never hidden */
+}
+.flower.correct-pop{
+  animation:pop-correct 0.6s ease forwards;
+}
+@keyframes pop-correct{
+  0%{ transform:translate(-50%,-50%) scale(1); }
+  40%{ transform:translate(-50%,-50%) scale(1.35); }
+  100%{ transform:translate(-50%,-50%) scale(0); opacity:0; }
+}
+.flower.wrong-shake{
+  animation:shake 0.5s ease;
+}
+@keyframes shake{
+  0%,100%{ transform:translate(-50%,-50%) rotate(0deg); }
+  20%{ transform:translate(-56%,-50%) rotate(-10deg); }
+  40%{ transform:translate(-44%,-50%) rotate(10deg); }
+  60%{ transform:translate(-56%,-50%) rotate(-8deg); }
+  80%{ transform:translate(-44%,-50%) rotate(8deg); }
+}
+
+.sparkle{
+  position:absolute;
+  font-size:1.4rem;
+  pointer-events:none;
+  z-index:20;
+  animation:sparkle-pop 0.7s ease forwards;
+}
+@keyframes sparkle-pop{
+  0%{ transform:translate(0,0) scale(0.4); opacity:1; }
+  100%{ transform:var(--sparkle-move) scale(1.2); opacity:0; }
+}
+
+/* ---------- Bee ---------- */
+#bee{
+  position:absolute;
+  width:clamp(50px, 10vw, 90px);
+  height:clamp(50px, 10vw, 90px);
+  z-index:15;
+  transform:translate(-50%,-50%);
+  will-change:left, top;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:clamp(2.4rem, 8vw, 4.2rem);
+  animation:flap 0.35s ease-in-out infinite;
+  filter:drop-shadow(0 6px 4px rgba(0,0,0,0.2));
+}
+@keyframes flap{
+  0%,100%{ transform:translate(-50%,-50%) scale(1,1); }
+  50%{ transform:translate(-50%,-50%) scale(1,0.92); }
+}
+#bee.facing-left{ transform:translate(-50%,-50%) scaleX(-1); }
+
+#beeMood{
+  position:absolute;
+  top:-1.6em;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:1.4rem;
+  opacity:0;
+  transition:opacity 0.25s ease, transform 0.25s ease;
+}
+#beeMood.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
+
+/* ---------- Touch controls (D-pad) ---------- */
+#touchControls{
+  position:absolute;
+  bottom:max(1.5vh, env(safe-area-inset-bottom));
+  left:0; right:0;
+  display:flex;
+  justify-content:center;
+  z-index:35;
+  pointer-events:none;
+  max-height:32vh; /* guarantees the full 3x3 pad always fits even on short screens */
+}
+#dpad{
+  --dpad-cell: clamp(40px, 9vw, 60px);
+  display:grid;
+  grid-template-columns:repeat(3, var(--dpad-cell));
+  grid-template-rows:repeat(3, var(--dpad-cell));
+  gap:6px;
+  pointer-events:auto;
+}
+.dpad-btn{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  padding:0;
+  margin:0;
+  background:rgba(255,255,255,0.85);
+  border:3px solid var(--purple);
+  border-radius:16px;
+  font-size:clamp(1.1rem, 4vw, 1.6rem);
+  line-height:1;
+  color:var(--purple);
+  touch-action:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 4px 0 rgba(0,0,0,0.15);
+}
+.dpad-btn:active{ background:var(--purple); color:#fff; }
+#dpadUp{ grid-column:2; grid-row:1; }
+#dpadLeft{ grid-column:1; grid-row:2; }
+#dpadRight{ grid-column:3; grid-row:2; }
+#dpadDown{ grid-column:2; grid-row:3; }
+
+/* ---------- Pause / feedback overlays ---------- */
+#pauseOverlay{
+  z-index:60;
+  background:rgba(60,30,90,0.55);
+}
+
+#feedbackBanner{
+  position:absolute;
+  top:38%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0.5);
+  z-index:40;
+  font-size:clamp(1.6rem, 6vw, 3rem);
+  font-weight:bold;
+  padding:0.3em 0.9em;
+  border-radius:24px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s ease, transform 0.2s ease;
+  text-align:center;
+}
+#feedbackBanner.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+#feedbackBanner.good{ background:rgba(62,207,107,0.95); color:#fff; }
+#feedbackBanner.bad{ background:rgba(255,92,92,0.95); color:#fff; }
+
+#nextRoundBtn{
+  position:absolute;
+  top:52%;
+  left:50%;
+  transform:translate(-50%, 0);
+  z-index:40;
+}
+
+/* ---------- Confetti (victory) ---------- */
+.confetti-piece{
+  position:absolute;
+  top:-10%;
+  width:10px;
+  height:16px;
+  opacity:0.9;
+  animation:confetti-fall linear infinite;
+}
+@keyframes confetti-fall{
+  0%{ transform:translateY(0) rotate(0deg); }
+  100%{ transform:translateY(110vh) rotate(360deg); }
+}
+
+/* ---------- Medal ---------- */
+.medal{
+  font-size:clamp(3rem, 12vw, 5rem);
+}
+
+/* ---------- Small screens tweak ---------- */
+@media (max-width:480px){
+  .card{ padding:2.2vh 4vw; }
+  #dpad{ --dpad-cell: 50px; }
+}
+
+/* Short / landscape viewports (e.g. a tablet turned sideways): keep the
+   D-pad compact enough that all 3 rows (including Down) stay on screen. */
+@media (max-height:500px){
+  #dpad{ --dpad-cell: 34px; gap:4px; }
+  #touchControls{ bottom:0.6vh; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============================================================
+       BACKGROUND DECORATIONS (clouds, sun, grass)
+       Populated / animated a bit via JS for randomness, but the
+       base markup lives here.
+  ============================================================= -->
+  <div class="sun"></div>
+  <div id="decorLayer"></div>
+
+  <!-- ============================================================
+       START SCREEN
+  ============================================================= -->
+  <div id="startScreen" class="screen">
+    <div class="card">
+      <div class="big-emoji">🐝🌸</div>
+      <h1 class="title">Bee Sight Words</h1>
+      <h2 class="subtitle">Fly &amp; find the matching word!</h2>
+      <p class="instructions-text">
+        <b>How to play:</b> Read the word at the top. Move your bee with the
+        <b>arrow keys</b> or the <b>touch buttons</b> and land on the flower
+        that shows the <b>same word</b>. Collect the right flower to earn points!
+      </p>
+      <div id="highScoreStart" class="hud-panel" style="display:inline-flex;margin-top:0.4em;">
+        🏆 High Score: <span id="highScoreValue">0</span>
+      </div>
+      <div class="btn-row" style="margin-top:1em;">
+        <button class="btn btn-primary" id="startBtn">▶ Start Game</button>
+        <button class="btn btn-secondary" id="howToPlayBtn">❓ Instructions</button>
+      </div>
+      <div style="margin-top:0.6em;">
+        <label style="font-size:1rem;color:var(--ink);font-weight:bold;">
+          <input type="checkbox" id="voiceToggle" checked style="transform:scale(1.4);vertical-align:middle;margin-right:0.4em;">
+          🔊 Read words aloud
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       INSTRUCTIONS SCREEN
+  ============================================================= -->
+  <div id="instructionsScreen" class="screen hidden">
+    <div class="card">
+      <h2 class="subtitle">❓ How To Play</h2>
+      <p class="instructions-text">
+        1. A <b>sight word</b> appears at the top of the screen.<br><br>
+        2. Look at the flowers floating in the garden — each one has a word on it.<br><br>
+        3. Use the <b>arrow keys</b> (or the on-screen buttons) to fly your bee to the flower that matches the top word.<br><br>
+        4. <b>Correct flower</b> = sparkles, a happy sound, and <b>+10 points</b>! ✨<br><br>
+        5. <b>Wrong flower</b> = the flower shakes and you lose one heart ❤️.<br><br>
+        6. You have <b>3 hearts</b> and <b>60 seconds</b>. Score enough points before time runs out to win!
+      </p>
+      <button class="btn btn-secondary" id="backFromInstructionsBtn">⬅ Back</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       GAME SCREEN
+  ============================================================= -->
+  <div id="gameScreen" class="hidden">
+
+    <div id="garden"></div>
+
+    <!-- Heads-up display -->
+    <div id="hud">
+      <div style="display:flex;flex-direction:column;gap:0.5vh;">
+        <div class="hud-panel">⭐ Score: <span id="scoreValue">0</span></div>
+        <div class="hud-panel" id="livesDisplay">
+          <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5vh;align-items:flex-end;">
+        <div class="hud-panel">⏱ <span id="timerValue">60</span>s</div>
+        <button class="btn btn-yellow" id="pauseBtn" style="margin:0;padding:0.35em 0.8em;font-size:1rem;">⏸ Pause</button>
+      </div>
+    </div>
+
+    <div id="topCenter">
+      <div id="targetWordPanel">
+        <div id="targetWordLabel">FIND THE WORD:</div>
+        <div style="display:flex;align-items:center;gap:0.4em;">
+          <span id="targetWord">the</span>
+          <button id="speakBtn" title="Hear the word">🔊</button>
+        </div>
+      </div>
+      <div id="progressBarWrap"><div id="progressBarFill"></div></div>
+    </div>
+
+    <!-- The bee character -->
+    <div id="bee">
+      🐝
+      <div id="beeMood">😊</div>
+    </div>
+
+    <!-- Feedback banner + next round button -->
+    <div id="feedbackBanner"></div>
+    <button class="btn btn-green hidden" id="nextRoundBtn">Next Round ▶</button>
+
+    <!-- Touch D-pad controls -->
+    <div id="touchControls">
+      <div id="dpad">
+        <button class="dpad-btn" id="dpadUp">⬆</button>
+        <button class="dpad-btn" id="dpadLeft">⬅</button>
+        <button class="dpad-btn" id="dpadRight">➡</button>
+        <button class="dpad-btn" id="dpadDown">⬇</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAUSE OVERLAY
+  ============================================================= -->
+  <div id="pauseOverlay" class="screen hidden">
+    <div class="card">
+      <h2 class="subtitle">⏸ Paused</h2>
+      <div class="btn-row">
+        <button class="btn btn-green" id="resumeBtn">▶ Resume</button>
+        <button class="btn btn-secondary" id="restartFromPauseBtn">🔁 Restart</button>
+        <button class="btn btn-primary" id="homeFromPauseBtn">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       GAME OVER SCREEN
+  ============================================================= -->
+  <div id="gameOverScreen" class="screen hidden">
+    <div class="card">
+      <div class="big-emoji">😢🐝</div>
+      <h2 class="subtitle">Game Over</h2>
+      <div id="gameOverStats" class="instructions-text"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="playAgainFromOverBtn">🔁 Play Again</button>
+        <button class="btn btn-secondary" id="homeFromOverBtn">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       VICTORY SCREEN
+  ============================================================= -->
+  <div id="victoryScreen" class="screen hidden">
+    <div class="card">
+      <div id="medalDisplay" class="medal">🥇</div>
+      <h2 class="subtitle">You Win!</h2>
+      <div id="victoryStats" class="instructions-text"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="playAgainFromVictoryBtn">🔁 Play Again</button>
+        <button class="btn btn-secondary" id="homeFromVictoryBtn">🏠 Home</button>
+      </div>
+    </div>
+    <div id="confettiLayer"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================================================================
+   BEE SIGHT WORDS — GAME LOGIC
+   Everything below is vanilla JavaScript. No external libraries.
+   The code is organized into clearly commented sections:
+     1. Config & state
+     2. Sound engine (Web Audio API, synthesized — no audio files)
+     3. Speech (optional read-aloud)
+     4. Background decoration generator
+     5. Screen / navigation helpers
+     6. Round setup (target word + flowers)
+     7. Bee movement & collision loop
+     8. Answer handling (correct / wrong)
+     9. Timer & lives
+    10. End-game (victory / game over) & local storage high score
+    11. Event wiring
+   ================================================================ */
+
+/* ---------- 1. CONFIG & STATE ---------- */
+
+// The 20 preschool sight words used by the game. Always rendered lowercase.
+const SIGHT_WORDS = [
+  "i","a","the","to","and","is","in","it","you","we",
+  "can","see","go","my","me","like","on","at","up","here"
+];
+
+const ROUND_TIME_LIMIT = 60;      // total game clock, in seconds
+const STARTING_LIVES   = 3;
+const POINTS_PER_CORRECT = 10;
+const WIN_SCORE = 150;            // reach this score (15 correct) to win
+const FLOWERS_PER_ROUND = 3;      // 1 correct + 2 distractors, shown in a horizontal row
+const BEE_SPEED = 4.6;            // px per animation frame (approx 60fps)
+const COLLISION_RADIUS_PCT = 8;   // % of garden's smaller dimension counted as "touching"
+
+const FLOWER_EMOJIS = ["🌸","🌼","🌺","🌻","🌷"];
+
+// Central mutable game state
+const state = {
+  score: 0,
+  lives: STARTING_LIVES,
+  timeLeft: ROUND_TIME_LIMIT,
+  correctCount: 0,
+  wrongCount: 0,
+  targetWord: "",
+  answered: false,       // true while waiting to advance to next round
+  paused: false,
+  running: false,
+  voiceEnabled: true,
+  beeX: 50,              // percentage position within #garden
+  beeY: 50,
+  keysHeld: { up:false, down:false, left:false, right:false },
+  timerIntervalId: null,
+  gameLoopId: null,
+  audioCtx: null
+};
+
+const highScoreKey = "beeSightWordsHighScore";
+
+/* ---------- 2. SOUND ENGINE (synthesized, offline-safe) ---------- */
+
+function ensureAudio(){
+  if(!state.audioCtx){
+    try{
+      state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }catch(e){ state.audioCtx = null; }
+  }
+  if(state.audioCtx && state.audioCtx.state === "suspended"){
+    state.audioCtx.resume();
+  }
+}
+
+// Play a single tone. type: 'sine' | 'square' | 'triangle' | 'sawtooth'
+function playTone(freq, startTime, duration, type = "sine", volume = 0.25){
+  if(!state.audioCtx) return;
+  const ctx = state.audioCtx;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, ctx.currentTime + startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + startTime);
+  osc.stop(ctx.currentTime + startTime + duration);
+}
+
+function sfxClick(){ ensureAudio(); playTone(520, 0, 0.08, "square", 0.15); }
+
+function sfxCorrect(){
+  ensureAudio();
+  // happy little ascending arpeggio
+  playTone(523, 0.00, 0.12, "triangle", 0.25);
+  playTone(659, 0.10, 0.12, "triangle", 0.25);
+  playTone(784, 0.20, 0.18, "triangle", 0.28);
+}
+
+function sfxWrong(){
+  ensureAudio();
+  // low descending buzz
+  playTone(220, 0.00, 0.15, "sawtooth", 0.2);
+  playTone(160, 0.12, 0.22, "sawtooth", 0.2);
+}
+
+function sfxBuzz(){
+  ensureAudio();
+  playTone(140, 0, 0.09, "sawtooth", 0.06);
+}
+
+function sfxVictory(){
+  ensureAudio();
+  [523,659,784,1046].forEach((f,i)=> playTone(f, i*0.15, 0.25, "triangle", 0.3));
+}
+
+function sfxGameOver(){
+  ensureAudio();
+  [392,349,294,220].forEach((f,i)=> playTone(f, i*0.18, 0.3, "sine", 0.25));
+}
+
+/* ---------- 3. SPEECH (optional read-aloud) ---------- */
+
+let cachedVoices = [];
+function refreshVoiceList(){
+  if(!("speechSynthesis" in window)) return;
+  cachedVoices = window.speechSynthesis.getVoices();
+}
+// Voice lists load asynchronously in some browsers — grab them as soon as they're ready.
+if("speechSynthesis" in window){
+  refreshVoiceList();
+  window.speechSynthesis.onvoiceschanged = refreshVoiceList;
+}
+
+function pickEnglishVoice(){
+  if(!cachedVoices || cachedVoices.length === 0) refreshVoiceList();
+  return cachedVoices.find(v => /en(-|_)?US/i.test(v.lang)) ||
+         cachedVoices.find(v => /^en/i.test(v.lang)) ||
+         null;
+}
+
+function speakWord(word){
+  if(!state.voiceEnabled) return;
+  if(!("speechSynthesis" in window)) return;
+  try{
+    window.speechSynthesis.cancel(); // stop any overlapping speech first
+
+    // Small delay avoids a well-known browser bug where calling speak()
+    // immediately after cancel() silently drops the new utterance.
+    setTimeout(() => {
+      const utter = new SpeechSynthesisUtterance(word);
+      utter.rate = 0.85;
+      utter.pitch = 1.2;
+      utter.lang = "en-US";
+      const voice = pickEnglishVoice();
+      if(voice) utter.voice = voice;
+      // Keep a reference on state so the utterance isn't garbage-collected
+      // mid-speech (another known browser quirk that cuts speech short).
+      state.currentUtterance = utter;
+      window.speechSynthesis.speak(utter);
+    }, 40);
+  }catch(e){ /* speech not available — fail silently, game still works */ }
+}
+
+// "Unlocks" speech synthesis on some strict mobile browsers (notably iOS
+// Safari) which only allow speech to start from a direct tap. Called once,
+// right when the player taps Start, so later automatic reads (next round,
+// etc.) are allowed to play without needing another tap.
+function primeSpeech(){
+  if(!("speechSynthesis" in window)) return;
+  try{
+    const warmUp = new SpeechSynthesisUtterance(" ");
+    warmUp.volume = 0; // silent — this call just unlocks the API
+    window.speechSynthesis.speak(warmUp);
+  }catch(e){ /* ignore */ }
+}
+
+/* ---------- 4. BACKGROUND DECORATION GENERATOR ---------- */
+
+function buildBackgroundDecor(){
+  const layer = document.getElementById("decorLayer");
+  layer.innerHTML = "";
+
+  // Clouds
+  const cloudCount = 4;
+  for(let i=0;i<cloudCount;i++){
+    const c = document.createElement("div");
+    c.className = "cloud";
+    c.textContent = "☁️";
+    c.style.top = (5 + Math.random()*22) + "%";
+    c.style.animationDuration = (22 + Math.random()*18) + "s";
+    c.style.animationDelay = (-Math.random()*20) + "s";
+    layer.appendChild(c);
+  }
+
+  // Grass tufts along the bottom
+  const tuftCount = 8;
+  for(let i=0;i<tuftCount;i++){
+    const g = document.createElement("div");
+    g.className = "grass-tuft";
+    g.textContent = "🌿";
+    g.style.left = (i * (100/tuftCount) + Math.random()*4) + "%";
+    g.style.animationDelay = (-Math.random()*2.6) + "s";
+    layer.appendChild(g);
+  }
+}
+
+/* ---------- 5. SCREEN / NAVIGATION HELPERS ---------- */
+
+function showOnly(id){
+  const ids = ["startScreen","instructionsScreen","gameScreen","pauseOverlay","gameOverScreen","victoryScreen"];
+  ids.forEach(sid => {
+    document.getElementById(sid).classList.toggle("hidden", sid !== id);
+  });
+}
+
+function goHome(){
+  stopAllLoops();
+  state.running = false;
+  updateHighScoreDisplay();
+  showOnly("startScreen");
+}
+
+/* ---------- 6. ROUND SETUP ---------- */
+
+function pickRandom(arr, excludeSet){
+  let choice;
+  do{
+    choice = arr[Math.floor(Math.random()*arr.length)];
+  } while(excludeSet && excludeSet.has(choice));
+  return choice;
+}
+
+function startNewRound(){
+  state.answered = false;
+  resetBeePosition();
+  document.getElementById("nextRoundBtn").classList.add("hidden");
+  document.getElementById("feedbackBanner").classList.remove("show","good","bad");
+
+  // Choose the target word
+  state.targetWord = pickRandom(SIGHT_WORDS);
+  document.getElementById("targetWord").textContent = state.targetWord;
+  speakWord(state.targetWord);
+
+  // Choose distractor words (distinct from target and each other)
+  const used = new Set([state.targetWord]);
+  const words = [state.targetWord];
+  while(words.length < FLOWERS_PER_ROUND){
+    const w = pickRandom(SIGHT_WORDS, used);
+    used.add(w);
+    words.push(w);
+  }
+  // Shuffle so the correct word isn't always first
+  for(let i = words.length -1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [words[i],words[j]] = [words[j],words[i]];
+  }
+
+  renderFlowers(words);
+}
+
+function renderFlowers(words){
+  const garden = document.getElementById("garden");
+  // remove old flowers (keep decorations, which live in #decorLayer, separate node)
+  garden.querySelectorAll(".flower").forEach(f => f.remove());
+
+  // Shuffle a copy of the flower emoji set so every flower in this round
+  // gets a different look (helps kids tell the flowers apart at a glance).
+  const shuffledEmojis = [...FLOWER_EMOJIS];
+  for(let i = shuffledEmojis.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledEmojis[i], shuffledEmojis[j]] = [shuffledEmojis[j], shuffledEmojis[i]];
+  }
+
+  // Lay the flowers out in a single horizontal row, evenly spaced
+  // (equal distance between each flower), vertically centered in the
+  // play area below the HUD and above the touch controls.
+  const rowTopPct = 55;
+  const slotWidth = 100 / words.length; // equal horizontal spacing per flower
+
+  words.forEach((word, idx) => {
+    const leftPct = slotWidth * idx + slotWidth / 2; // center of each equal slot
+
+    const flower = document.createElement("div");
+    flower.className = "flower";
+    flower.dataset.word = word;
+    flower.style.left = leftPct + "%";
+    flower.style.top = rowTopPct + "%";
+    flower.style.animationDelay = (-Math.random()*3) + "s";
+
+    const emoji = document.createElement("div");
+    emoji.className = "flower-emoji";
+    emoji.textContent = shuffledEmojis[idx % shuffledEmojis.length];
+
+    const label = document.createElement("div");
+    label.className = "flower-word";
+    label.textContent = word;
+
+    flower.appendChild(emoji);
+    flower.appendChild(label);
+    garden.appendChild(flower);
+  });
+}
+
+/* ---------- 7. BEE MOVEMENT & COLLISION LOOP ---------- */
+
+function positionBee(){
+  const bee = document.getElementById("bee");
+  bee.style.left = state.beeX + "%";
+  bee.style.top = state.beeY + "%";
+}
+
+// Send the bee back to its starting spot above the flower row.
+// Called at the start of every new round so each round begins the same way.
+function resetBeePosition(){
+  state.beeX = 50;
+  state.beeY = 28;
+  document.getElementById("bee").classList.remove("facing-left");
+  positionBee();
+}
+
+function gameLoopStep(){
+  if(!state.paused && state.running){
+    const garden = document.getElementById("garden");
+    const rect = garden.getBoundingClientRect();
+    // Convert fixed pixel speed into percentage-of-garden movement
+    const dxPct = (BEE_SPEED / rect.width) * 100;
+    const dyPct = (BEE_SPEED / rect.height) * 100;
+
+    const bee = document.getElementById("bee");
+    if(state.keysHeld.left){  state.beeX -= dxPct; bee.classList.add("facing-left"); }
+    if(state.keysHeld.right){ state.beeX += dxPct; bee.classList.remove("facing-left"); }
+    if(state.keysHeld.up)     state.beeY -= dyPct;
+    if(state.keysHeld.down)   state.beeY += dyPct;
+
+    // Clamp within garden bounds (leave a small margin)
+    state.beeX = Math.max(4, Math.min(96, state.beeX));
+    state.beeY = Math.max(16, Math.min(94, state.beeY));
+
+    positionBee();
+    checkFlowerCollisions();
+  }
+  state.gameLoopId = requestAnimationFrame(gameLoopStep);
+}
+
+function checkFlowerCollisions(){
+  if(state.answered) return; // already answered this round, ignore further hits
+  const flowers = document.querySelectorAll(".flower");
+  flowers.forEach(flower => {
+    const fLeft = parseFloat(flower.style.left);
+    const fTop = parseFloat(flower.style.top);
+    const dist = Math.hypot(state.beeX - fLeft, state.beeY - fTop);
+    if(dist < COLLISION_RADIUS_PCT){
+      handleAnswer(flower);
+    }
+  });
+}
+
+/* ---------- 8. ANSWER HANDLING ---------- */
+
+function spawnSparkles(flower){
+  const garden = document.getElementById("garden");
+  const gRect = garden.getBoundingClientRect();
+  const fLeftPx = (parseFloat(flower.style.left)/100) * gRect.width;
+  const fTopPx  = (parseFloat(flower.style.top)/100) * gRect.height;
+
+  for(let i=0;i<8;i++){
+    const s = document.createElement("div");
+    s.className = "sparkle";
+    s.textContent = "✨";
+    s.style.left = fLeftPx + "px";
+    s.style.top = fTopPx + "px";
+    const angle = Math.random()*Math.PI*2;
+    const dist = 40 + Math.random()*40;
+    s.style.setProperty("--sparkle-move", `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`);
+    garden.appendChild(s);
+    setTimeout(()=> s.remove(), 750);
+  }
+}
+
+function setBeeMood(mood){
+  const moodEl = document.getElementById("beeMood");
+  moodEl.textContent = mood;
+  moodEl.classList.add("show");
+  setTimeout(()=> moodEl.classList.remove("show"), 1200);
+}
+
+function showFeedback(text, good){
+  const banner = document.getElementById("feedbackBanner");
+  banner.textContent = text;
+  banner.classList.remove("good","bad");
+  banner.classList.add(good ? "good" : "bad", "show");
+}
+
+function updateProgressBar(){
+  const pct = Math.max(0, Math.min(100, (state.score / WIN_SCORE) * 100));
+  document.getElementById("progressBarFill").style.width = pct + "%";
+}
+
+function updateLivesDisplay(){
+  const hearts = document.querySelectorAll("#livesDisplay .heart");
+  hearts.forEach((h, i) => {
+    h.classList.toggle("lost", i >= state.lives);
+  });
+}
+
+function handleAnswer(flower){
+  state.answered = true;
+  const isCorrect = flower.dataset.word === state.targetWord;
+
+  if(isCorrect){
+    state.score += POINTS_PER_CORRECT;
+    state.correctCount++;
+    document.getElementById("scoreValue").textContent = state.score;
+    flower.classList.add("correct-pop");
+    spawnSparkles(flower);
+    sfxCorrect();
+    setBeeMood("😄");
+    showFeedback("Great job! +10 ⭐", true);
+    updateProgressBar();
+
+    if(state.score >= WIN_SCORE){
+      setTimeout(()=> triggerVictory(), 700);
+      return;
+    }
+  } else {
+    state.wrongCount++;
+    state.lives--;
+    flower.classList.add("wrong-shake");
+    sfxWrong();
+    setBeeMood("😵");
+    showFeedback("Oops, try again! 🐝", false);
+    updateLivesDisplay();
+
+    if(state.lives <= 0){
+      setTimeout(()=> triggerGameOver(false), 700);
+      return;
+    }
+  }
+
+  // Show the "Next Round" button so the child can advance manually...
+  const nextBtn = document.getElementById("nextRoundBtn");
+  nextBtn.classList.remove("hidden");
+  // ...but also auto-advance after a short pause for a smooth flow.
+  clearTimeout(state.autoAdvanceTimeout);
+  state.autoAdvanceTimeout = setTimeout(()=>{
+    if(state.running && !state.paused) advanceRound();
+  }, 1500);
+}
+
+function advanceRound(){
+  clearTimeout(state.autoAdvanceTimeout);
+  document.getElementById("nextRoundBtn").classList.add("hidden");
+  document.getElementById("feedbackBanner").classList.remove("show");
+  startNewRound();
+}
+
+/* ---------- 9. TIMER & LIVES ---------- */
+
+function startTimer(){
+  clearInterval(state.timerIntervalId);
+  state.timerIntervalId = setInterval(()=>{
+    if(state.paused || !state.running) return;
+    state.timeLeft--;
+    document.getElementById("timerValue").textContent = state.timeLeft;
+    if(state.timeLeft <= 0){
+      clearInterval(state.timerIntervalId);
+      triggerGameOver(false);
+    }
+  }, 1000);
+}
+
+/* ---------- 10. END GAME & HIGH SCORE ---------- */
+
+function stopAllLoops(){
+  cancelAnimationFrame(state.gameLoopId);
+  clearInterval(state.timerIntervalId);
+  clearTimeout(state.autoAdvanceTimeout);
+}
+
+function getHighScore(){
+  try{ return parseInt(localStorage.getItem(highScoreKey) || "0", 10); }
+  catch(e){ return 0; }
+}
+function setHighScoreIfBeaten(){
+  try{
+    const current = getHighScore();
+    if(state.score > current){
+      localStorage.setItem(highScoreKey, String(state.score));
+    }
+  }catch(e){ /* localStorage unavailable — ignore gracefully */ }
+}
+function updateHighScoreDisplay(){
+  document.getElementById("highScoreValue").textContent = getHighScore();
+}
+
+function computeAccuracy(){
+  const total = state.correctCount + state.wrongCount;
+  if(total === 0) return 0;
+  return Math.round((state.correctCount/total)*100);
+}
+
+function medalForAccuracy(acc){
+  if(acc >= 90) return {emoji:"🥇", label:"Gold Medal"};
+  if(acc >= 70) return {emoji:"🥈", label:"Silver Medal"};
+  return {emoji:"🥉", label:"Bronze Medal"};
+}
+
+function buildStatsHTML(){
+  const acc = computeAccuracy();
+  return `
+    <p>⭐ <b>Final Score:</b> ${state.score}</p>
+    <p>🎯 <b>Accuracy:</b> ${acc}%</p>
+    <p>✅ <b>Correct Answers:</b> ${state.correctCount}</p>
+    <p>❌ <b>Wrong Answers:</b> ${state.wrongCount}</p>
+    <p>⏱ <b>Time Remaining:</b> ${state.timeLeft}s</p>
+  `;
+}
+
+function triggerGameOver(){
+  state.running = false;
+  stopAllLoops();
+  sfxGameOver();
+  setHighScoreIfBeaten();
+  document.getElementById("gameOverStats").innerHTML = buildStatsHTML() +
+    `<p style="margin-top:0.6em;">🏆 <b>High Score:</b> ${getHighScore()}</p>`;
+  showOnly("gameOverScreen");
+}
+
+function triggerVictory(){
+  state.running = false;
+  stopAllLoops();
+  sfxVictory();
+  setHighScoreIfBeaten();
+  const acc = computeAccuracy();
+  const medal = medalForAccuracy(acc);
+  document.getElementById("medalDisplay").textContent = medal.emoji;
+  document.getElementById("victoryStats").innerHTML = buildStatsHTML() +
+    `<p style="margin-top:0.6em;">${medal.emoji} <b>${medal.label}</b></p>
+     <p>🏆 <b>High Score:</b> ${getHighScore()}</p>`;
+  showOnly("victoryScreen");
+  launchConfetti();
+}
+
+function launchConfetti(){
+  const layer = document.getElementById("confettiLayer");
+  layer.innerHTML = "";
+  const colors = ["#ff6fa5","#a56bff","#ffd23f","#3ecf6b","#ff9a3d","#4dc9ff"];
+  for(let i=0;i<60;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.left = Math.random()*100 + "%";
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (2.5 + Math.random()*2.5) + "s";
+    p.style.animationDelay = (-Math.random()*3) + "s";
+    p.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+    layer.appendChild(p);
+  }
+}
+
+/* ---------- MAIN GAME (RE)START ---------- */
+
+function resetGameState(){
+  state.score = 0;
+  state.lives = STARTING_LIVES;
+  state.timeLeft = ROUND_TIME_LIMIT;
+  state.correctCount = 0;
+  state.wrongCount = 0;
+  state.answered = false;
+  state.paused = false;
+  state.beeX = 50;
+  state.beeY = 28; // start above the flower row (flowers sit at 55%) so the bee doesn't overlap them
+  state.keysHeld = { up:false, down:false, left:false, right:false };
+
+  document.getElementById("scoreValue").textContent = "0";
+  document.getElementById("timerValue").textContent = String(ROUND_TIME_LIMIT);
+  document.getElementById("bee").classList.remove("facing-left");
+  updateLivesDisplay();
+  updateProgressBar();
+  positionBee();
+}
+
+function startGame(){
+  ensureAudio();
+  sfxClick();
+  resetGameState();
+  state.running = true;
+  showOnly("gameScreen");
+  startNewRound();
+  startTimer();
+  cancelAnimationFrame(state.gameLoopId);
+  gameLoopStep();
+}
+
+function pauseGame(){
+  state.paused = true;
+  showOnly("pauseOverlay");
+  // Also keep the game screen visible beneath, since pauseOverlay is an overlay
+  document.getElementById("gameScreen").classList.remove("hidden");
+}
+
+function resumeGame(){
+  state.paused = false;
+  document.getElementById("pauseOverlay").classList.add("hidden");
+}
+
+function restartGame(){
+  sfxClick();
+  startGame();
+}
+
+/* ---------- 11. EVENT WIRING ---------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+  buildBackgroundDecor();
+  updateHighScoreDisplay();
+  positionBee();
+
+  // --- Start screen ---
+  document.getElementById("startBtn").addEventListener("click", () => {
+    state.voiceEnabled = document.getElementById("voiceToggle").checked;
+    primeSpeech(); // unlock speech synthesis on strict mobile browsers while we have a real tap
+    startGame();
+  });
+  document.getElementById("howToPlayBtn").addEventListener("click", () => {
+    sfxClick(); ensureAudio();
+    showOnly("instructionsScreen");
+  });
+  document.getElementById("backFromInstructionsBtn").addEventListener("click", () => {
+    sfxClick();
+    showOnly("startScreen");
+  });
+
+  // --- HUD controls ---
+  document.getElementById("pauseBtn").addEventListener("click", () => { sfxClick(); pauseGame(); });
+  document.getElementById("resumeBtn").addEventListener("click", () => { sfxClick(); resumeGame(); });
+  document.getElementById("restartFromPauseBtn").addEventListener("click", restartGame);
+  document.getElementById("homeFromPauseBtn").addEventListener("click", () => { sfxClick(); goHome(); });
+  document.getElementById("speakBtn").addEventListener("click", () => { ensureAudio(); speakWord(state.targetWord); });
+  document.getElementById("nextRoundBtn").addEventListener("click", () => { sfxClick(); advanceRound(); });
+
+  // --- Game over / victory screens ---
+  document.getElementById("playAgainFromOverBtn").addEventListener("click", restartGame);
+  document.getElementById("homeFromOverBtn").addEventListener("click", () => { sfxClick(); goHome(); });
+  document.getElementById("playAgainFromVictoryBtn").addEventListener("click", restartGame);
+  document.getElementById("homeFromVictoryBtn").addEventListener("click", () => { sfxClick(); goHome(); });
+
+  // --- Keyboard controls ---
+  window.addEventListener("keydown", (e) => {
+    switch(e.key){
+      case "ArrowUp": state.keysHeld.up = true; e.preventDefault(); break;
+      case "ArrowDown": state.keysHeld.down = true; e.preventDefault(); break;
+      case "ArrowLeft": state.keysHeld.left = true; e.preventDefault(); break;
+      case "ArrowRight": state.keysHeld.right = true; e.preventDefault(); break;
+      case " ": if(state.running){ state.paused ? resumeGame() : pauseGame(); } break;
+    }
+  });
+  window.addEventListener("keyup", (e) => {
+    switch(e.key){
+      case "ArrowUp": state.keysHeld.up = false; break;
+      case "ArrowDown": state.keysHeld.down = false; break;
+      case "ArrowLeft": state.keysHeld.left = false; break;
+      case "ArrowRight": state.keysHeld.right = false; break;
+    }
+  });
+
+  // --- Touch / mouse D-pad controls ---
+  function bindHold(btnId, key){
+    const btn = document.getElementById(btnId);
+    const start = (e) => { e.preventDefault(); ensureAudio(); state.keysHeld[key] = true; };
+    const end = (e) => { e.preventDefault(); state.keysHeld[key] = false; };
+    btn.addEventListener("pointerdown", start);
+    btn.addEventListener("pointerup", end);
+    btn.addEventListener("pointerleave", end);
+    btn.addEventListener("pointercancel", end);
+  }
+  bindHold("dpadUp","up");
+  bindHold("dpadDown","down");
+  bindHold("dpadLeft","left");
+  bindHold("dpadRight","right");
+
+  // Re-clamp bee position gracefully on resize/orientation change
+  window.addEventListener("resize", () => {
+    state.beeX = Math.max(4, Math.min(96, state.beeX));
+    state.beeY = Math.max(16, Math.min(94, state.beeY));
+    positionBee();
+  });
+});
+</script>
+</body>
+</html>
